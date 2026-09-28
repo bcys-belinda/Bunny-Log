@@ -20,6 +20,7 @@ export type FoodEntry = {
   date: string;
   foodName: string;
   quantity: number;
+  quantityUnit: 'kg' | 'tablespoon' | 'pill' | 'tablet' | 'handful' | 'serving';
   favorite: boolean;
 };
 

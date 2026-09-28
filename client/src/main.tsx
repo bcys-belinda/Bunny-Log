@@ -17,6 +17,17 @@ const navItems: Array<{ label: string; icon: React.ReactNode }> = [
   { label: 'Settings', icon: <Settings24Regular /> },
 ];
 
+const routineItems = [
+  '1 pill · Brytin Therabiotic 2x Probiotic',
+  '1 tablespoon · Oxy-Gen Immunize for Rabbits & Cavies',
+  '1 tablet · Natural Nibbles ProCare+ Digestion',
+  '2 tablespoons · Sherwood Pet Health Adult Rabbit Food',
+  '1 handful · Medium Timothy Hay (Rabbit Hole Hay)',
+  'Clean left pee tray',
+  'Clean right pee tray',
+  'Wash potty tray',
+];
+
 type DashboardData = {
   rabbits: Rabbit[];
   careLogs: CareLog[];
@@ -61,6 +72,7 @@ const styles: Record<string, React.CSSProperties> = {
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '20px' },
   formActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' },
   select: { width: '100%', minHeight: '32px', padding: '0 8px', border: '1px solid #D1C3C8', borderRadius: '4px', background: '#fff', color: '#402F36', font: 'inherit' },
+  formHeader: { display: 'flex', flexDirection: 'column', gap: '6px' },
 };
 
 function App() {
@@ -70,8 +82,9 @@ function App() {
   const [savingRabbit, setSavingRabbit] = useState(false);
   const [savingEntry, setSavingEntry] = useState(false);
   const [rabbitForm, setRabbitForm] = useState({ name: '', breed: '', dob: '', notes: '' });
-  const [careForm, setCareForm] = useState({ rabbitId: '', date: today, checkIns: '', notes: '' });
-  const [foodForm, setFoodForm] = useState({ rabbitId: '', date: today, foodName: '', quantity: '', favorite: false });
+  const [careForm, setCareForm] = useState({ rabbitId: '', date: today, notes: '' });
+  const [routineChecks, setRoutineChecks] = useState<string[]>([]);
+  const [foodForm, setFoodForm] = useState({ rabbitId: '', date: today, foodName: '', quantity: '', quantityUnit: 'kg' as FoodEntry['quantityUnit'], favorite: false });
   const [weightForm, setWeightForm] = useState({ rabbitId: '', date: today, value: '' });
   const [healthForm, setHealthForm] = useState({ rabbitId: '', date: today, category: '', summary: '', reminderDate: '' });
   const [memoryForm, setMemoryForm] = useState<{ rabbitId: string; caption: string; photo: File | null }>({ rabbitId: '', caption: '', photo: null });
@@ -156,7 +169,7 @@ function App() {
     event.preventDefault();
     setSavingEntry(true);
     try {
-      await api.createCareLog({ rabbitId: selectedRabbitId(careForm.rabbitId), date: careForm.date, checkIns: careForm.checkIns.split(',').map((item) => item.trim()).filter(Boolean), notes: careForm.notes });
+      await api.createCareLog({ rabbitId: selectedRabbitId(careForm.rabbitId), date: careForm.date, checkIns: routineChecks, notes: careForm.notes });
       await loadDashboard();
       setActiveNav('Home');
     } catch { setError('The daily log could not be saved. Check the API connection and try again.'); } finally { setSavingEntry(false); }
@@ -166,7 +179,7 @@ function App() {
     event.preventDefault();
     setSavingEntry(true);
     try {
-      await api.createFoodEntry({ rabbitId: selectedRabbitId(foodForm.rabbitId), date: foodForm.date, foodName: foodForm.foodName, quantity: Number(foodForm.quantity), favorite: foodForm.favorite });
+      await api.createFoodEntry({ rabbitId: selectedRabbitId(foodForm.rabbitId), date: foodForm.date, foodName: foodForm.foodName, quantity: Number(foodForm.quantity), quantityUnit: foodForm.quantityUnit, favorite: foodForm.favorite });
       await loadDashboard();
       setActiveNav('Home');
     } catch { setError('The food entry could not be saved. Check the API connection and try again.'); } finally { setSavingEntry(false); }
@@ -223,7 +236,7 @@ function App() {
   );
 
   const entryActions = (label: string) => (
-    <div style={styles.formActions}>
+    <div className="form-actions" style={styles.formActions}>
       <Button type="button" appearance="subtle" onClick={() => setActiveNav('Home')}>Cancel</Button>
       <Button type="submit" appearance="primary" disabled={savingEntry || !focusRabbit}>{savingEntry ? 'Saving...' : label}</Button>
     </div>
@@ -231,14 +244,14 @@ function App() {
 
   return (
     <FluentProvider theme={webLightTheme}>
-      <div style={styles.app}>
-        <aside style={styles.sidebar}>
+      <div className="app-shell" style={styles.app}>
+        <aside className="sidebar-shell" style={styles.sidebar}>
           <div style={styles.brand}>
             <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: '#D98CA8', display: 'grid', placeItems: 'center', color: '#fff', fontSize: '22px' }}>🐇</div>
             Bunny Log
           </div>
 
-          <nav style={styles.nav}>
+          <nav className="nav-shell" style={styles.nav}>
             {navItems.map((item, index) => (
               <button className="nav-button" type="button" key={item.label} style={{ ...styles.navItem, ...(activeNav === item.label ? styles.activeNav : {}) }} onClick={() => setActiveNav(item.label)} aria-current={activeNav === item.label ? 'page' : undefined}>
                 {item.icon}
@@ -259,8 +272,8 @@ function App() {
           </Card>
         </aside>
 
-        <main style={styles.main}>
-          <div style={styles.topBar}>
+        <main className="main-shell" style={styles.main}>
+          <div className="top-bar" style={styles.topBar}>
             <div>
               <div style={styles.tinyLabel}>Good morning</div>
               <Title3 as="h1" style={{ margin: 0 }}>Bunny care dashboard</Title3>
@@ -274,34 +287,32 @@ function App() {
 
           {activeNav === 'Daily Log' && (
             <section style={styles.formCard}>
-              <Subtitle2 style={{ color: '#B35E7B' }}>Daily care</Subtitle2><Title3 as="h2" style={{ margin: '6px 0 0' }}>Log a check-in</Title3><Text style={{ color: '#8B6572' }}>Record how your rabbit is doing today.</Text>
-              <form onSubmit={(event) => void submitCareLog(event)}><div style={styles.formGrid}>{rabbitPicker(careForm.rabbitId, (value) => setCareForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', careForm.date, (value) => setCareForm((current) => ({ ...current, date: value })))} </div><Field label="Check-ins" required><Input value={careForm.checkIns} onChange={(_, data) => setCareForm((current) => ({ ...current, checkIns: data.value }))} placeholder="Eating, drinking, active" required /></Field><Field label="Notes" style={{ marginTop: '16px' }}><Textarea value={careForm.notes} onChange={(_, data) => setCareForm((current) => ({ ...current, notes: data.value }))} placeholder="Anything unusual or worth remembering" /></Field>{entryActions('Save daily log')}</form>
+              <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Daily care</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Log today’s routine</Title3><Text style={{ color: '#8B6572' }}>Tick off food, supplements, and cage care as you go.</Text></div>
+              <form onSubmit={(event) => void submitCareLog(event)}><div style={styles.formGrid}>{rabbitPicker(careForm.rabbitId, (value) => setCareForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', careForm.date, (value) => setCareForm((current) => ({ ...current, date: value })))} </div><Field label="Routine checklist" required><div style={{ display: 'grid', gap: '10px' }}>{routineItems.map((item) => <label key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.35 }}><input type="checkbox" checked={routineChecks.includes(item)} onChange={(event) => setRoutineChecks((current) => event.target.checked ? [...current, item] : current.filter((selected) => selected !== item))} />{item}</label>)}</div></Field><Field label="Notes" style={{ marginTop: '16px' }}><Textarea value={careForm.notes} onChange={(_, data) => setCareForm((current) => ({ ...current, notes: data.value }))} placeholder="Anything unusual or worth remembering" /></Field>{entryActions('Save routine')}</form>
             </section>
           )}
 
           {activeNav === 'Food' && (
-            <section style={styles.formCard}><Subtitle2 style={{ color: '#B35E7B' }}>Nutrition</Subtitle2><Title3 as="h2" style={{ margin: '6px 0 0' }}>Add food entry</Title3><Text style={{ color: '#8B6572' }}>Keep meals and favorites easy to compare.</Text><form onSubmit={(event) => void submitFood(event)}><div style={styles.formGrid}>{rabbitPicker(foodForm.rabbitId, (value) => setFoodForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', foodForm.date, (value) => setFoodForm((current) => ({ ...current, date: value })))}</div><div style={styles.formGrid}><Field label="Food name" required><Input value={foodForm.foodName} onChange={(_, data) => setFoodForm((current) => ({ ...current, foodName: data.value }))} placeholder="Timothy hay" required /></Field><Field label="Quantity (kg)" required><Input type="number" min="0" step="0.1" value={foodForm.quantity} onChange={(_, data) => setFoodForm((current) => ({ ...current, quantity: data.value }))} required /></Field></div><label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px' }}><input type="checkbox" checked={foodForm.favorite} onChange={(event) => setFoodForm((current) => ({ ...current, favorite: event.target.checked }))} /> Favorite food</label>{entryActions('Save food')}</form></section>
+            <section style={styles.formCard}><div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Nutrition</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Add food entry</Title3><Text style={{ color: '#8B6572' }}>Track portions in the units you actually use.</Text></div><form onSubmit={(event) => void submitFood(event)}><div style={styles.formGrid}>{rabbitPicker(foodForm.rabbitId, (value) => setFoodForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', foodForm.date, (value) => setFoodForm((current) => ({ ...current, date: value })))}</div><div style={styles.formGrid}><Field label="Food or supplement" required><Input value={foodForm.foodName} onChange={(_, data) => setFoodForm((current) => ({ ...current, foodName: data.value }))} placeholder="Timothy hay or probiotic" required /></Field><Field label="Quantity and unit" required><div style={{ display: 'flex', gap: '8px' }}><Input type="number" min="0" step="0.1" value={foodForm.quantity} onChange={(_, data) => setFoodForm((current) => ({ ...current, quantity: data.value }))} required /><select style={{ ...styles.select, width: '150px' }} value={foodForm.quantityUnit} onChange={(event) => setFoodForm((current) => ({ ...current, quantityUnit: event.target.value as FoodEntry['quantityUnit'] }))}><option value="kg">kg</option><option value="tablespoon">tablespoon</option><option value="pill">pill</option><option value="tablet">tablet</option><option value="handful">handful</option><option value="serving">serving</option></select></div></Field></div><label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px' }}><input type="checkbox" checked={foodForm.favorite} onChange={(event) => setFoodForm((current) => ({ ...current, favorite: event.target.checked }))} /> Favorite food</label>{entryActions('Save food')}</form></section>
           )}
 
           {activeNav === 'Weight' && (
-            <section style={styles.formCard}><Subtitle2 style={{ color: '#B35E7B' }}>Wellbeing</Subtitle2><Title3 as="h2" style={{ margin: '6px 0 0' }}>Add weight entry</Title3><Text style={{ color: '#8B6572' }}>Track changes over time in kilograms.</Text><form onSubmit={(event) => void submitWeight(event)}><div style={styles.formGrid}>{rabbitPicker(weightForm.rabbitId, (value) => setWeightForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', weightForm.date, (value) => setWeightForm((current) => ({ ...current, date: value })))}</div><Field label="Weight (kg)" required><Input type="number" min="0" step="0.01" value={weightForm.value} onChange={(_, data) => setWeightForm((current) => ({ ...current, value: data.value }))} placeholder="1.80" required /></Field>{entryActions('Save weight')}</form></section>
+            <section style={styles.formCard}><div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Wellbeing</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Add weight entry</Title3><Text style={{ color: '#8B6572' }}>Track changes over time in kilograms.</Text></div><form onSubmit={(event) => void submitWeight(event)}><div style={styles.formGrid}>{rabbitPicker(weightForm.rabbitId, (value) => setWeightForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', weightForm.date, (value) => setWeightForm((current) => ({ ...current, date: value })))}</div><Field label="Weight (kg)" required><Input type="number" min="0" step="0.01" value={weightForm.value} onChange={(_, data) => setWeightForm((current) => ({ ...current, value: data.value }))} placeholder="1.80" required /></Field>{entryActions('Save weight')}</form></section>
           )}
 
           {activeNav === 'Health' && (
-            <section style={styles.formCard}><Subtitle2 style={{ color: '#B35E7B' }}>Health</Subtitle2><Title3 as="h2" style={{ margin: '6px 0 0' }}>Add health record</Title3><Text style={{ color: '#8B6572' }}>Keep checkups, treatments, and reminders together.</Text><form onSubmit={(event) => void submitHealth(event)}><div style={styles.formGrid}>{rabbitPicker(healthForm.rabbitId, (value) => setHealthForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', healthForm.date, (value) => setHealthForm((current) => ({ ...current, date: value })))}</div><Field label="Category" required><Input value={healthForm.category} onChange={(_, data) => setHealthForm((current) => ({ ...current, category: data.value }))} placeholder="Checkup" required /></Field><Field label="Summary" required style={{ marginTop: '16px' }}><Textarea value={healthForm.summary} onChange={(_, data) => setHealthForm((current) => ({ ...current, summary: data.value }))} placeholder="What happened?" required /></Field><div style={{ marginTop: '16px' }}>{dateField('Reminder date', healthForm.reminderDate, (value) => setHealthForm((current) => ({ ...current, reminderDate: value })), false)}</div>{entryActions('Save health record')}</form></section>
+            <section style={styles.formCard}><div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Health</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Add health record</Title3><Text style={{ color: '#8B6572' }}>Keep checkups, treatments, and reminders together.</Text></div><form onSubmit={(event) => void submitHealth(event)}><div style={styles.formGrid}>{rabbitPicker(healthForm.rabbitId, (value) => setHealthForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', healthForm.date, (value) => setHealthForm((current) => ({ ...current, date: value })))}</div><Field label="Category" required><Input value={healthForm.category} onChange={(_, data) => setHealthForm((current) => ({ ...current, category: data.value }))} placeholder="Checkup" required /></Field><Field label="Summary" required style={{ marginTop: '16px' }}><Textarea value={healthForm.summary} onChange={(_, data) => setHealthForm((current) => ({ ...current, summary: data.value }))} placeholder="What happened?" required /></Field><div style={{ marginTop: '16px' }}>{dateField('Reminder date', healthForm.reminderDate, (value) => setHealthForm((current) => ({ ...current, reminderDate: value })), false)}</div>{entryActions('Save health record')}</form></section>
           )}
 
           {activeNav === 'Memories' && (
-            <section style={styles.formCard}><Subtitle2 style={{ color: '#B35E7B' }}>Memories</Subtitle2><Title3 as="h2" style={{ margin: '6px 0 0' }}>Add a memory</Title3><Text style={{ color: '#8B6572' }}>Save a photo and a caption for your rabbit.</Text><form onSubmit={(event) => void submitMemory(event)}><div style={styles.formGrid}>{rabbitPicker(memoryForm.rabbitId, (value) => setMemoryForm((current) => ({ ...current, rabbitId: value })))}<Field label="Photo" required><input type="file" accept="image/*" onChange={(event) => setMemoryForm((current) => ({ ...current, photo: event.target.files?.[0] ?? null }))} required /></Field></div><Field label="Caption" required style={{ marginTop: '16px' }}><Input value={memoryForm.caption} onChange={(_, data) => setMemoryForm((current) => ({ ...current, caption: data.value }))} placeholder="Sunny afternoon" required /></Field>{entryActions('Save memory')}</form></section>
+            <section style={styles.formCard}><div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Memories</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Add a memory</Title3><Text style={{ color: '#8B6572' }}>Save a photo and a caption for your rabbit.</Text></div><form onSubmit={(event) => void submitMemory(event)}><div style={styles.formGrid}>{rabbitPicker(memoryForm.rabbitId, (value) => setMemoryForm((current) => ({ ...current, rabbitId: value })))}<Field label="Photo" required><input type="file" accept="image/*" onChange={(event) => setMemoryForm((current) => ({ ...current, photo: event.target.files?.[0] ?? null }))} required /></Field></div><Field label="Caption" required style={{ marginTop: '16px' }}><Input value={memoryForm.caption} onChange={(_, data) => setMemoryForm((current) => ({ ...current, caption: data.value }))} placeholder="Sunny afternoon" required /></Field>{entryActions('Save memory')}</form></section>
           )}
 
           {activeNav === 'Settings' && (
             <section style={styles.formCard}>
-              <Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2>
-              <Title3 as="h2" style={{ margin: '6px 0 0' }}>Add a rabbit</Title3>
-              <Text style={{ color: '#8B6572' }}>Save the basics once, then use the other sections to track care.</Text>
+              <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Add a rabbit</Title3><Text style={{ color: '#8B6572' }}>Save the basics once, then use the other sections to track care.</Text></div>
               <form onSubmit={(event) => void submitRabbit(event)}>
-                <div style={styles.formGrid}>
+                <div className="form-grid" style={styles.formGrid}>
                   <Field label="Name" required>
                     <Input value={rabbitForm.name} onChange={(_, data) => setRabbitForm((current) => ({ ...current, name: data.value }))} placeholder="e.g. Fei Fei" required />
                   </Field>
@@ -315,7 +326,7 @@ function App() {
                 <Field label="Notes" style={{ marginTop: '16px' }}>
                   <Textarea value={rabbitForm.notes} onChange={(_, data) => setRabbitForm((current) => ({ ...current, notes: data.value }))} placeholder="Temperament, routines, or anything helpful" resize="vertical" />
                 </Field>
-                <div style={styles.formActions}>
+                <div className="form-actions" style={styles.formActions}>
                   <Button type="button" appearance="subtle" onClick={() => setRabbitForm({ name: '', breed: '', dob: '', notes: '' })}>Clear</Button>
                   <Button type="submit" appearance="primary" disabled={savingRabbit}>{savingRabbit ? 'Saving...' : 'Save profile'}</Button>
                 </div>
@@ -337,7 +348,7 @@ function App() {
             </Badge>
           </section>
 
-          <section style={styles.summaryGrid}>
+          <section className="summary-grid" style={styles.summaryGrid}>
             {[
               ['Daily check-ins', String(checkInsToday), `Across ${rabbits.length} rabbits`],
               ['Food logged', `${foodTotal.toFixed(1)} kg`, `${foodEntries.length} entries`],
@@ -352,7 +363,7 @@ function App() {
             ))}
           </section>
 
-          <section style={styles.section}>
+          <section className="content-section" style={styles.section}>
             <Card style={styles.listCard}>
               <div style={{ ...styles.row, borderTop: 'none', paddingTop: 0 }}>
                 <Text weight="semibold">Rabbit profiles</Text>
@@ -399,7 +410,7 @@ function App() {
             </Card>
           </section>
 
-          <section style={styles.section}>
+          <section className="content-section" style={styles.section}>
             <Card style={styles.listCard}>
               <div style={{ ...styles.row, borderTop: 'none', paddingTop: 0 }}>
                 <Text weight="semibold">Food tracking</Text>
@@ -411,7 +422,7 @@ function App() {
                     <Text weight="semibold">{meal.foodName}</Text>
                     <div style={{ color: '#6F645C', fontSize: '12px' }}>{meal.favorite ? 'Favorite' : formatDate(meal.date)}</div>
                   </div>
-                    <div style={{ color: '#B35E7B', fontWeight: 600 }}>{meal.quantity} kg</div>
+                    <div style={{ color: '#B35E7B', fontWeight: 600 }}>{meal.quantity} {meal.quantityUnit}</div>
                 </div>
               ))}
               {!loading && foodEntries.length === 0 && <Text>No food entries recorded.</Text>}
@@ -439,7 +450,7 @@ function App() {
               <Text weight="semibold">Memories</Text>
               <Button appearance="subtle">View gallery</Button>
             </div>
-            <div style={styles.gallery}>
+            <div className="gallery-grid" style={styles.gallery}>
               {memories.map((entry) => (
                 <div key={entry.id} style={styles.photoCard}>
                   <img style={styles.photo} src={memoryContentUrl(entry.id)} alt={entry.caption} />

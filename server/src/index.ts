@@ -77,19 +77,20 @@ app.post('/api/daily-logs', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/food-entries', asyncHandler(async (_req, res) => {
-  const result = await pool.query('SELECT id, rabbit_id AS "rabbitId", date::text AS date, food_name AS "foodName", quantity::float8 AS quantity, favorite FROM food_entries ORDER BY date DESC, created_at DESC');
+  const result = await pool.query('SELECT id, rabbit_id AS "rabbitId", date::text AS date, food_name AS "foodName", quantity::float8 AS quantity, quantity_unit AS "quantityUnit", favorite FROM food_entries ORDER BY date DESC, created_at DESC');
   res.json(result.rows);
 }));
 
 app.post('/api/food-entries', asyncHandler(async (req, res) => {
-  const { rabbitId, date, foodName, quantity, favorite } = req.body as Record<string, unknown>;
-  if (typeof rabbitId !== 'string' || !validDate(date) || typeof foodName !== 'string' || !foodName.trim() || typeof quantity !== 'number' || !Number.isFinite(quantity) || quantity < 0 || (favorite !== undefined && typeof favorite !== 'boolean')) {
-    validationError(res, 'Rabbit, valid date, food name, non-negative quantity, and optional favorite flag are required');
+  const { rabbitId, date, foodName, quantity, quantityUnit, favorite } = req.body as Record<string, unknown>;
+  const validQuantityUnits = ['kg', 'tablespoon', 'pill', 'tablet', 'handful', 'serving'];
+  if (typeof rabbitId !== 'string' || !validDate(date) || typeof foodName !== 'string' || !foodName.trim() || typeof quantity !== 'number' || !Number.isFinite(quantity) || quantity < 0 || typeof quantityUnit !== 'string' || !validQuantityUnits.includes(quantityUnit) || (favorite !== undefined && typeof favorite !== 'boolean')) {
+    validationError(res, 'Rabbit, valid date, food name, quantity, quantity unit, and optional favorite flag are required');
     return;
   }
   const result = await pool.query(
-    'INSERT INTO food_entries (id, rabbit_id, date, food_name, quantity, favorite) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, rabbit_id AS "rabbitId", date::text AS date, food_name AS "foodName", quantity::float8 AS quantity, favorite',
-    [randomUUID(), rabbitId, date, foodName.trim(), quantity, favorite ?? false],
+    'INSERT INTO food_entries (id, rabbit_id, date, food_name, quantity, quantity_unit, favorite) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, rabbit_id AS "rabbitId", date::text AS date, food_name AS "foodName", quantity::float8 AS quantity, quantity_unit AS "quantityUnit", favorite',
+    [randomUUID(), rabbitId, date, foodName.trim(), quantity, quantityUnit, favorite ?? false],
   );
   res.status(201).json(result.rows[0]);
 }));
