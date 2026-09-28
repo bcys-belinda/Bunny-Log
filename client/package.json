@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@bunny-log/shared": "1.0.0",
     "@fluentui/react-components": "^9.54.0",
     "@fluentui/react-icons": "^2.0.3",
     "react": "^18.3.1",
