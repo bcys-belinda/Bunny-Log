@@ -13,6 +13,7 @@ export interface ApiClient {
   listRabbits(): Promise<Rabbit[]>;
   createRabbit(input: Omit<Rabbit, 'id'>): Promise<Rabbit>;
   updateRabbit(id: string, input: Omit<Rabbit, 'id'>): Promise<Rabbit>;
+  uploadRabbitPhoto(id: string, input: FormData): Promise<void>;
   listCareLogs(): Promise<CareLog[]>;
   createCareLog(input: Omit<CareLog, 'id'>): Promise<CareLog>;
   listFoodEntries(): Promise<FoodEntry[]>;

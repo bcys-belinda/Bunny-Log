@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { FluentProvider, webLightTheme, Text, Button, Card, Title3, Subtitle2, Avatar, Badge, Field, Input, Textarea } from '@fluentui/react-components';
 import { Home24Regular, CalendarToday24Regular, Food24Regular, DataTrending24Regular, HeartPulse24Regular, Image24Regular, Settings24Regular, ArrowRight24Regular, Star24Regular, Clock24Regular, CheckmarkCircle24Regular, Cart24Regular } from '@fluentui/react-icons';
 import type { CareLog, FoodEntry, HealthRecord, MemoryEntry, Rabbit, WeightMeasurement } from '@bunny-log/shared';
-import { api, memoryContentUrl } from './api';
+import { api, memoryContentUrl, rabbitPhotoUrl } from './api';
 import './nav.css';
 
 const navItems: Array<{ label: string; icon: React.ReactNode }> = [
@@ -83,6 +83,7 @@ function App() {
   const [savingLog, setSavingLog] = useState(false);
   const [savingRabbit, setSavingRabbit] = useState(false);
   const [editingRabbitId, setEditingRabbitId] = useState<string | null>(null);
+  const [rabbitPhoto, setRabbitPhoto] = useState<File | null>(null);
   const [savingEntry, setSavingEntry] = useState(false);
   const [rabbitForm, setRabbitForm] = useState({ name: '', breed: '', dob: '', notes: '' });
   const [careForm, setCareForm] = useState({ rabbitId: '', date: today, notes: '' });
@@ -161,13 +162,21 @@ function App() {
     setSavingRabbit(true);
     setError('');
     try {
+      const savedRabbit = editingRabbitId
+        ? await api.updateRabbit(editingRabbitId, rabbitForm)
+        : await api.createRabbit(rabbitForm);
+      if (rabbitPhoto) {
+        const formData = new FormData();
+        formData.append('photo', rabbitPhoto);
+        await api.uploadRabbitPhoto(savedRabbit.id, formData);
+      }
       if (editingRabbitId) {
-        await api.updateRabbit(editingRabbitId, rabbitForm);
+        setEditingRabbitId(null);
       } else {
-        await api.createRabbit(rabbitForm);
+        setEditingRabbitId(null);
       }
       setRabbitForm({ name: '', breed: '', dob: '', notes: '' });
-      setEditingRabbitId(null);
+      setRabbitPhoto(null);
       await loadDashboard();
       setActiveNav('Home');
     } catch {
@@ -327,7 +336,7 @@ function App() {
           <Card style={{ padding: '18px', borderRadius: '18px', background: '#fff' }}>
             <div style={styles.tinyLabel}>Today</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
-              <Avatar size={48} name={focusRabbit?.name ?? ''} color="colorful" />
+              <Avatar size={48} name={focusRabbit?.name ?? ''} color="colorful" image={focusRabbit ? { src: rabbitPhotoUrl(focusRabbit.id) } : undefined} />
               <div>
                 <Text weight="semibold">{focusRabbit?.name ?? 'No profiles yet'}</Text>
                   <div style={{ color: '#6F645C', fontSize: '12px' }}>{focusRabbit?.breed ?? 'Add a rabbit profile to begin'}</div>
@@ -386,12 +395,15 @@ function App() {
                   <Field label="Date of birth" required>
                     <Input type="date" value={rabbitForm.dob} onChange={(_, data) => setRabbitForm((current) => ({ ...current, dob: data.value }))} required />
                   </Field>
+                  <Field label="Profile photo">
+                    <input type="file" accept="image/*" onChange={(event) => setRabbitPhoto(event.target.files?.[0] ?? null)} />
+                  </Field>
                 </div>
                 <Field label="Notes" style={{ marginTop: '16px' }}>
                   <Textarea value={rabbitForm.notes} onChange={(_, data) => setRabbitForm((current) => ({ ...current, notes: data.value }))} placeholder="Temperament, routines, or anything helpful" resize="vertical" />
                 </Field>
                 <div className="form-actions" style={styles.formActions}>
-                  <Button type="button" appearance="subtle" onClick={() => { setRabbitForm({ name: '', breed: '', dob: '', notes: '' }); setEditingRabbitId(null); }}>Clear</Button>
+                  <Button type="button" appearance="subtle" onClick={() => { setRabbitForm({ name: '', breed: '', dob: '', notes: '' }); setEditingRabbitId(null); setRabbitPhoto(null); }}>Clear</Button>
                   <Button type="submit" appearance="primary" disabled={savingRabbit}>{savingRabbit ? 'Saving...' : editingRabbitId ? 'Update profile' : 'Save profile'}</Button>
                 </div>
               </form>

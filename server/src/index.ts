@@ -75,6 +75,32 @@ app.patch('/api/rabbits/:id', asyncHandler(async (req, res) => {
   res.json(result.rows[0]);
 }));
 
+app.get('/api/rabbits/:id/photo', asyncHandler(async (req, res) => {
+  const result = await pool.query('SELECT profile_image_data, profile_content_type FROM rabbits WHERE id = $1', [req.params.id]);
+  if (!result.rowCount || !result.rows[0].profile_image_data) {
+    res.status(404).end();
+    return;
+  }
+  res.type(result.rows[0].profile_content_type ?? 'application/octet-stream').send(result.rows[0].profile_image_data);
+}));
+
+app.post('/api/rabbits/:id/photo', upload.single('photo'), asyncHandler(async (req, res) => {
+  const file = req.file;
+  if (!file || !file.mimetype.startsWith('image/')) {
+    validationError(res, 'An image file named photo is required');
+    return;
+  }
+  const result = await pool.query(
+    'UPDATE rabbits SET profile_image_data = $1, profile_content_type = $2 WHERE id = $3 RETURNING id',
+    [file.buffer, file.mimetype, req.params.id],
+  );
+  if (!result.rowCount) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Rabbit profile not found' } });
+    return;
+  }
+  res.status(204).end();
+}));
+
 app.get('/api/daily-logs', asyncHandler(async (_req, res) => {
   const result = await pool.query('SELECT id, rabbit_id AS "rabbitId", date::text AS date, check_ins AS "checkIns", notes FROM care_logs ORDER BY date DESC, created_at DESC');
   res.json(result.rows);

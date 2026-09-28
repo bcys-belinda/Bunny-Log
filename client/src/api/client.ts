@@ -37,6 +37,7 @@ export const liveClient: ApiClient = {
   listRabbits: () => request<Rabbit[]>('/rabbits'),
   createRabbit: (input) => create<Rabbit>('/rabbits', input),
   updateRabbit: (id, input) => request<Rabbit>(`/rabbits/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  uploadRabbitPhoto: async (id, input) => { await request<void>(`/rabbits/${encodeURIComponent(id)}/photo`, { method: 'POST', body: input }); },
   listCareLogs: () => request<CareLog[]>('/daily-logs'),
   createCareLog: (input) => create<CareLog>('/daily-logs', input),
   listFoodEntries: () => request<FoodEntry[]>('/food-entries'),
@@ -52,3 +53,4 @@ export const liveClient: ApiClient = {
 };
 
 export const memoryContentUrl = (id: string): string => `${API_BASE}/memories/${encodeURIComponent(id)}/content`;
+export const rabbitPhotoUrl = (id: string): string => `${API_BASE}/rabbits/${encodeURIComponent(id)}/photo`;
