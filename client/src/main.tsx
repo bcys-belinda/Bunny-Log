@@ -86,12 +86,15 @@ function App() {
   const [rabbitForm, setRabbitForm] = useState({ name: '', breed: '', dob: '', notes: '' });
   const [careForm, setCareForm] = useState({ rabbitId: '', date: today, notes: '' });
   const [routineChecks, setRoutineChecks] = useState<string[]>([]);
+  const [customRoutineItems, setCustomRoutineItems] = useState<string[]>(() => JSON.parse(localStorage.getItem('bunny-log-routine-items') ?? '[]') as string[]);
+  const [routineDraft, setRoutineDraft] = useState('');
+  const [poopSize, setPoopSize] = useState('');
   const [foodForm, setFoodForm] = useState({ rabbitId: '', date: today, foodName: '', quantity: '', quantityUnit: 'kg' as FoodEntry['quantityUnit'], favorite: false });
   const [weightForm, setWeightForm] = useState({ rabbitId: '', date: today, value: '' });
   const [healthForm, setHealthForm] = useState({ rabbitId: '', date: today, category: '', summary: '', reminderDate: '' });
   const [memoryForm, setMemoryForm] = useState<{ rabbitId: string; caption: string; photo: File | null }>({ rabbitId: '', caption: '', photo: null });
   const [shoppingDraft, setShoppingDraft] = useState('');
-  const [shoppingItems, setShoppingItems] = useState(() => ['Timothy hay', 'Sherwood Adult Rabbit Food', 'Rabbit-safe litter', 'Brytin probiotic', 'Oxy-Gen Immunize', 'Natural Nibbles ProCare+']);
+  const [shoppingItems, setShoppingItems] = useState(() => JSON.parse(localStorage.getItem('bunny-log-shopping-items') ?? 'null') as string[] ?? ['Timothy hay', 'Sherwood Adult Rabbit Food', 'Rabbit-safe litter', 'Brytin probiotic', 'Oxy-Gen Immunize', 'Natural Nibbles ProCare+']);
   const [error, setError] = useState('');
   const [activeNav, setActiveNav] = useState('Home');
 
@@ -117,6 +120,9 @@ function App() {
   useEffect(() => {
     void loadDashboard();
   }, []);
+
+  useEffect(() => { localStorage.setItem('bunny-log-routine-items', JSON.stringify(customRoutineItems)); }, [customRoutineItems]);
+  useEffect(() => { localStorage.setItem('bunny-log-shopping-items', JSON.stringify(shoppingItems)); }, [shoppingItems]);
 
   const rabbits = dashboard?.rabbits ?? [];
   const careLogs = dashboard?.careLogs ?? [];
@@ -201,7 +207,8 @@ function App() {
     event.preventDefault();
     setSavingEntry(true);
     try {
-      await api.createCareLog({ rabbitId: selectedRabbitId(careForm.rabbitId), date: careForm.date, checkIns: routineChecks, notes: careForm.notes });
+      const checks = poopSize ? [...routineChecks, `Poop size · ${poopSize}`] : routineChecks;
+      await api.createCareLog({ rabbitId: selectedRabbitId(careForm.rabbitId), date: careForm.date, checkIns: checks, notes: careForm.notes });
       await loadDashboard();
       setActiveNav('Home');
     } catch { setError('The daily log could not be saved. Check the API connection and try again.'); } finally { setSavingEntry(false); }
@@ -282,6 +289,13 @@ function App() {
     setShoppingDraft('');
   }
 
+  function addRoutineItem() {
+    const item = routineDraft.trim();
+    if (!item) return;
+    setCustomRoutineItems((current) => [...current, item]);
+    setRoutineDraft('');
+  }
+
   return (
     <FluentProvider theme={webLightTheme}>
       <div className="app-shell" style={styles.app}>
@@ -328,7 +342,7 @@ function App() {
           {activeNav === 'Daily Log' && (
             <section style={styles.formCard}>
               <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Daily care</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Log today’s routine</Title3><Text style={{ color: '#8B6572' }}>Tick off food, supplements, and cage care as you go.</Text></div>
-              <form onSubmit={(event) => void submitCareLog(event)}><div style={styles.formGrid}>{rabbitPicker(careForm.rabbitId, (value) => setCareForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', careForm.date, (value) => setCareForm((current) => ({ ...current, date: value })))} </div><Field label="Routine checklist" required><div style={{ display: 'grid', gap: '10px' }}>{routineItems.map((item) => <label key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.35 }}><input type="checkbox" checked={routineChecks.includes(item)} onChange={(event) => setRoutineChecks((current) => event.target.checked ? [...current, item] : current.filter((selected) => selected !== item))} />{item}</label>)}</div></Field><Field label="Notes" style={{ marginTop: '16px' }}><Textarea value={careForm.notes} onChange={(_, data) => setCareForm((current) => ({ ...current, notes: data.value }))} placeholder="Anything unusual or worth remembering" /></Field>{entryActions('Save routine')}</form>
+              <form onSubmit={(event) => void submitCareLog(event)}><div style={styles.formGrid}>{rabbitPicker(careForm.rabbitId, (value) => setCareForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', careForm.date, (value) => setCareForm((current) => ({ ...current, date: value })))} </div><Field label="Routine checklist" required><div style={{ display: 'grid', gap: '10px' }}>{[...routineItems, ...customRoutineItems].map((item) => <label key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.35 }}><input type="checkbox" checked={routineChecks.includes(item)} onChange={(event) => setRoutineChecks((current) => event.target.checked ? [...current, item] : current.filter((selected) => selected !== item))} />{item}</label>)}</div></Field><div style={{ display: 'flex', gap: '10px', alignItems: 'end', marginTop: '16px' }}><Field label="Poop size"><select style={styles.select} value={poopSize} onChange={(event) => setPoopSize(event.target.value)}><option value="">Not recorded</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></Field><div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'end' }}><Input value={routineDraft} onChange={(_, data) => setRoutineDraft(data.value)} placeholder="Add checklist item" /><Button type="button" appearance="secondary" onClick={addRoutineItem}>Add</Button></div></div><Field label="Notes" style={{ marginTop: '16px' }}><Textarea value={careForm.notes} onChange={(_, data) => setCareForm((current) => ({ ...current, notes: data.value }))} placeholder="Anything unusual or worth remembering" /></Field>{entryActions('Save routine')}</form>
             </section>
           )}
 
