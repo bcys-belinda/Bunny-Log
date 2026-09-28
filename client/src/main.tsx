@@ -37,25 +37,25 @@ function reminderTiming(value: string): string {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  app: { display: 'flex', minHeight: '100vh', background: '#FBF8F1', color: '#2F2A27', fontFamily: 'Inter, system-ui, sans-serif' },
-  sidebar: { width: '260px', background: '#F2EDE4', borderRight: '1px solid #E7DFD4', padding: '24px 18px', display: 'flex', flexDirection: 'column', gap: '18px' },
-  brand: { display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700, fontSize: '24px', color: '#2F2A27' },
+  app: { display: 'flex', minHeight: '100vh', background: '#FFF7FA', color: '#402F36', fontFamily: 'Inter, system-ui, sans-serif' },
+  sidebar: { width: '260px', background: '#FFF0F5', borderRight: '1px solid #F3D6E0', padding: '24px 18px', display: 'flex', flexDirection: 'column', gap: '18px' },
+  brand: { display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700, fontSize: '24px', color: '#402F36' },
   nav: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  navItem: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '12px', background: 'transparent', color: '#2F2A27', fontWeight: 600, cursor: 'pointer', border: '1px solid transparent' },
-  activeNav: { background: '#7B8F73', color: '#fff', borderColor: '#7B8F73' },
+  navItem: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '12px', background: 'transparent', color: '#402F36', fontWeight: 600, cursor: 'pointer', border: '1px solid transparent', fontFamily: 'inherit', fontSize: '14px', textAlign: 'left' },
+  activeNav: { background: '#D98CA8', color: '#fff', borderColor: '#D98CA8' },
   main: { flex: 1, padding: '28px 30px 40px' },
   topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' },
-  hero: { background: 'linear-gradient(135deg, #E6EFE2 0%, #FBF8F1 100%)', border: '1px solid #E7DFD4', borderRadius: '22px', padding: '28px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
+  hero: { background: 'linear-gradient(135deg, #FBE3EC 0%, #FFF7FA 100%)', border: '1px solid #F3D6E0', borderRadius: '22px', padding: '28px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
   heroText: { display: 'flex', flexDirection: 'column', gap: '8px' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px', marginBottom: '24px' },
-  statCard: { padding: '18px 20px', borderRadius: '16px', background: '#fff', border: '1px solid #E7DFD4', boxShadow: '0 2px 6px rgba(47,42,39,0.04)' },
+  statCard: { padding: '18px 20px', borderRadius: '16px', background: '#fff', border: '1px solid #F3D6E0', boxShadow: '0 2px 6px rgba(64,47,54,0.06)' },
   section: { display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '18px', marginBottom: '24px' },
-  listCard: { padding: '18px', borderRadius: '16px', background: '#fff', border: '1px solid #E7DFD4' },
+  listCard: { padding: '18px', borderRadius: '16px', background: '#fff', border: '1px solid #F3D6E0' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid #F0E7DA' },
-  tinyLabel: { color: '#6F645C', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' },
+  tinyLabel: { color: '#9D6075', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' },
   gallery: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' },
-  photoCard: { padding: 0, overflow: 'hidden', borderRadius: '18px', border: '1px solid #E7DFD4', background: '#fff' },
-  photo: { width: '100%', height: '150px', objectFit: 'cover', display: 'block', background: 'linear-gradient(135deg, #DDD2C6, #C9D7C6)' },
+  photoCard: { padding: 0, overflow: 'hidden', borderRadius: '18px', border: '1px solid #F3D6E0', background: '#fff' },
+  photo: { width: '100%', height: '150px', objectFit: 'cover', display: 'block', background: 'linear-gradient(135deg, #F7C9D8, #FBE3EC)' },
 };
 
 function App() {
@@ -63,6 +63,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [savingLog, setSavingLog] = useState(false);
   const [error, setError] = useState('');
+  const [activeNav, setActiveNav] = useState('Home');
 
   async function loadDashboard() {
     try {
@@ -123,16 +124,16 @@ function App() {
       <div style={styles.app}>
         <aside style={styles.sidebar}>
           <div style={styles.brand}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: '#7B8F73', display: 'grid', placeItems: 'center', color: '#fff', fontSize: '22px' }}>🐇</div>
+            <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: '#D98CA8', display: 'grid', placeItems: 'center', color: '#fff', fontSize: '22px' }}>🐇</div>
             Bunny Log
           </div>
 
           <nav style={styles.nav}>
             {navItems.map((item, index) => (
-              <div key={item.label} style={{ ...styles.navItem, ...(index === 0 ? styles.activeNav : {}) }}>
+              <button type="button" key={item.label} style={{ ...styles.navItem, ...(activeNav === item.label ? styles.activeNav : {}) }} onClick={() => setActiveNav(item.label)} aria-current={activeNav === item.label ? 'page' : undefined}>
                 {item.icon}
                 <span>{item.label}</span>
-              </div>
+              </button>
             ))}
           </nav>
 
@@ -159,12 +160,25 @@ function App() {
             </Button>
           </div>
 
+          {error && <Text role="alert" style={{ display: 'block', color: '#B54768', marginBottom: '16px' }}>{error}</Text>}
+
+          {activeNav !== 'Home' && (
+            <section style={{ ...styles.hero, minHeight: '280px' }}>
+              <div style={styles.heroText}>
+                <Subtitle2 style={{ color: '#B35E7B' }}>{activeNav}</Subtitle2>
+                <Text style={{ fontSize: '32px', fontWeight: 700 }}>{activeNav} workspace</Text>
+                <Text style={{ color: '#8B6572' }}>This section is ready for your {activeNav.toLowerCase()} records.</Text>
+              </div>
+              <Badge appearance="tint" color="informative" style={{ padding: '10px 16px', fontSize: '16px' }}>Ready</Badge>
+            </section>
+          )}
+
+          {activeNav === 'Home' && <>
           {loading && <Text role="status">Loading care data...</Text>}
-          {error && <Text role="alert" style={{ display: 'block', color: '#A4262C', marginBottom: '16px' }}>{error}</Text>}
 
           <section style={styles.hero}>
             <div style={styles.heroText}>
-              <Subtitle2 style={{ color: '#7B8F73' }}>Rabbit profile</Subtitle2>
+              <Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2>
               <Text style={{ fontSize: '32px', fontWeight: 700 }}>{focusRabbit ? `${focusRabbit.name}'s care overview` : 'No rabbit profiles yet'}</Text>
               <Text style={{ color: '#6F645C' }}>{focusRabbit ? `${focusRabbit.breed} · ${focusRabbit.notes || 'No profile notes'}` : 'Rabbit care records will appear here when available.'}</Text>
             </div>
@@ -207,7 +221,7 @@ function App() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <Text weight="semibold">{weight ? `${weight.value} ${weight.unit}` : 'No weight'}</Text>
-                    <div style={{ color: '#7B8F73', fontSize: '12px' }}>{rabbit.notes || 'No notes'}</div>
+                    <div style={{ color: '#B35E7B', fontSize: '12px' }}>{rabbit.notes || 'No notes'}</div>
                   </div>
                 </div>;
               })}
@@ -247,7 +261,7 @@ function App() {
                     <Text weight="semibold">{meal.foodName}</Text>
                     <div style={{ color: '#6F645C', fontSize: '12px' }}>{meal.favorite ? 'Favorite' : formatDate(meal.date)}</div>
                   </div>
-                  <div style={{ color: '#7B8F73', fontWeight: 600 }}>{meal.quantity} kg</div>
+                    <div style={{ color: '#B35E7B', fontWeight: 600 }}>{meal.quantity} kg</div>
                 </div>
               ))}
               {!loading && foodEntries.length === 0 && <Text>No food entries recorded.</Text>}
@@ -288,6 +302,7 @@ function App() {
               {!loading && memories.length === 0 && <Text>No memories recorded.</Text>}
             </div>
           </Card>
+          </>}
         </main>
       </div>
     </FluentProvider>
