@@ -42,6 +42,22 @@
   animation: bunny-pulse 2.8s ease-in-out infinite;
 }
 
+section[style*="max-width: 900px"] {
+  position: relative;
+  overflow: hidden;
+}
+
+section[style*="max-width: 900px"]::after {
+  content: '✦';
+  position: absolute;
+  right: 24px;
+  top: 18px;
+  color: rgba(217, 140, 168, 0.35);
+  font-size: 26px;
+  animation: bunny-drift 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .photo-card {
   animation: bunny-rise-in 500ms ease both;
 }
@@ -126,14 +142,14 @@
     grid-template-columns: 1fr !important;
   }
 
-  section[style*="max-width: 720px"] {
+  section[style*="max-width: 900px"] {
     max-width: none !important;
     padding: 18px !important;
   }
 
-  section[style*="max-width: 720px"] input,
-  section[style*="max-width: 720px"] textarea,
-  section[style*="max-width: 720px"] select {
+  section[style*="max-width: 900px"] input,
+  section[style*="max-width: 900px"] textarea,
+  section[style*="max-width: 900px"] select {
     max-width: 100%;
   }
 
@@ -145,6 +161,7 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-panel::after,
   .profile-badge,
+  section[style*="max-width: 900px"]::after,
   .photo-card {
     animation: none;
   }
