@@ -9,7 +9,7 @@ import type {
 } from '@bunny-log/shared';
 import type { ApiClient } from './types';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);

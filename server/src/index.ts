@@ -1,11 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import multer from 'multer';
 import { Pool } from 'pg';
 import type { ErrorRequestHandler, Request, RequestHandler, Response } from 'express';
 
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.env.local') });
 dotenv.config();
 
 const app = express();
