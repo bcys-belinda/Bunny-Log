@@ -8,6 +8,25 @@
   outline-offset: 2px;
 }
 
+@keyframes bunny-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.main-shell > * {
+  animation: bunny-rise-in 420ms ease both;
+}
+
+.main-shell > *:nth-child(2) { animation-delay: 40ms; }
+.main-shell > *:nth-child(3) { animation-delay: 80ms; }
+.main-shell > *:nth-child(4) { animation-delay: 120ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .main-shell > * {
+    animation: none;
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell {
     display: block !important;

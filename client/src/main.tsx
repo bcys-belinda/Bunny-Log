@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { useEffect, useState } from 'react';
 import { FluentProvider, webLightTheme, Text, Button, Card, Title3, Subtitle2, Avatar, Badge, Field, Input, Textarea } from '@fluentui/react-components';
-import { Home24Regular, CalendarToday24Regular, Food24Regular, DataTrending24Regular, HeartPulse24Regular, Image24Regular, Settings24Regular, ArrowRight24Regular, Star24Regular, Clock24Regular, CheckmarkCircle24Regular } from '@fluentui/react-icons';
+import { Home24Regular, CalendarToday24Regular, Food24Regular, DataTrending24Regular, HeartPulse24Regular, Image24Regular, Settings24Regular, ArrowRight24Regular, Star24Regular, Clock24Regular, CheckmarkCircle24Regular, Cart24Regular } from '@fluentui/react-icons';
 import type { CareLog, FoodEntry, HealthRecord, MemoryEntry, Rabbit, WeightMeasurement } from '@bunny-log/shared';
 import { api, memoryContentUrl } from './api';
 import './nav.css';
@@ -15,6 +15,7 @@ const navItems: Array<{ label: string; icon: React.ReactNode }> = [
   { label: 'Health', icon: <HeartPulse24Regular /> },
   { label: 'Memories', icon: <Image24Regular /> },
   { label: 'Settings', icon: <Settings24Regular /> },
+  { label: 'Shopping List', icon: <Cart24Regular /> },
 ];
 
 const routineItems = [
@@ -89,6 +90,8 @@ function App() {
   const [weightForm, setWeightForm] = useState({ rabbitId: '', date: today, value: '' });
   const [healthForm, setHealthForm] = useState({ rabbitId: '', date: today, category: '', summary: '', reminderDate: '' });
   const [memoryForm, setMemoryForm] = useState<{ rabbitId: string; caption: string; photo: File | null }>({ rabbitId: '', caption: '', photo: null });
+  const [shoppingDraft, setShoppingDraft] = useState('');
+  const [shoppingItems, setShoppingItems] = useState(() => ['Timothy hay', 'Sherwood Adult Rabbit Food', 'Rabbit-safe litter', 'Brytin probiotic', 'Oxy-Gen Immunize', 'Natural Nibbles ProCare+']);
   const [error, setError] = useState('');
   const [activeNav, setActiveNav] = useState('Home');
 
@@ -271,6 +274,14 @@ function App() {
     </div>
   );
 
+  function addShoppingItem(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const item = shoppingDraft.trim();
+    if (!item) return;
+    setShoppingItems((current) => [...current, item]);
+    setShoppingDraft('');
+  }
+
   return (
     <FluentProvider theme={webLightTheme}>
       <div className="app-shell" style={styles.app}>
@@ -360,6 +371,19 @@ function App() {
                   <Button type="submit" appearance="primary" disabled={savingRabbit}>{savingRabbit ? 'Saving...' : editingRabbitId ? 'Update profile' : 'Save profile'}</Button>
                 </div>
               </form>
+            </section>
+          )}
+
+          {activeNav === 'Shopping List' && (
+            <section style={styles.formCard}>
+              <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Bunny supplies</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Shopping list</Title3><Text style={{ color: '#8B6572' }}>Keep the next hay refill and care supplies in one gentle little list.</Text></div>
+              <form onSubmit={addShoppingItem} style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <Input value={shoppingDraft} onChange={(_, data) => setShoppingDraft(data.value)} placeholder="Add a supply" style={{ flex: 1 }} />
+                <Button type="submit" appearance="primary">Add</Button>
+              </form>
+              <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
+                {shoppingItems.map((item) => <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '12px', background: '#FFF0F5' }}><input type="checkbox" /> <span>{item}</span></label>)}
+              </div>
             </section>
           )}
 
