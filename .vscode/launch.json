@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Bunny Log API (debug)",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "outFiles": ["${workspaceFolder}/server/dist/**/*.js"],
+      "preLaunchTask": "bunny-log-api: api dev"
+    },
+    {
+      "name": "Bunny Log Client (debug)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/client",
+      "preLaunchTask": "bunny-log-client: dev"
+    },
+    {
+      "name": "Standalone Web (debug)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5174",
+      "webRoot": "${workspaceFolder}/services/web",
+      "preLaunchTask": "standalone-web: dev"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All Services",
+      "configurations": [
+        "Bunny Log API (debug)",
+        "Bunny Log Client (debug)",
+        "Standalone Web (debug)"
+      ],
+      "preLaunchTask": "debug-all-services: start",
+      "stopAll": true
+    }
+  ]
+}

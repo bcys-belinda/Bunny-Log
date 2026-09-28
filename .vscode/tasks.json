@@ -1,0 +1,99 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "bunny-log-api: npm install",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}/server" },
+      "problemMatcher": [],
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "type": "shell",
+      "label": "bunny-log-api: npm clean",
+      "command": "npm run clean",
+      "options": { "cwd": "${workspaceFolder}/server" },
+      "dependsOn": "bunny-log-api: npm install",
+      "problemMatcher": [],
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "type": "shell",
+      "label": "bunny-log-api: npm watch",
+      "command": "npm run build -- --watch",
+      "options": { "cwd": "${workspaceFolder}/server" },
+      "dependsOn": "bunny-log-api: npm clean",
+      "isBackground": true,
+      "problemMatcher": "$tsc-watch",
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "type": "shell",
+      "label": "bunny-log-api: db:migrate",
+      "command": "npm run db:migrate",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "type": "shell",
+      "label": "bunny-log-api: api dev",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/server" },
+      "dependsOn": ["bunny-log-api: npm watch", "bunny-log-api: db:migrate"],
+      "dependsOrder": "sequence",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "bunny-log-api",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Bunny Log API running",
+          "endsPattern": "Bunny Log API running on http://localhost:3001"
+        }
+      },
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "type": "shell",
+      "label": "bunny-log-client: dev",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/client" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "Local:"
+        }
+      },
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "type": "shell",
+      "label": "standalone-web: dev",
+      "command": "npm run dev -- --port 5174",
+      "options": { "cwd": "${workspaceFolder}/services/web" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "Local:"
+        }
+      },
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    },
+    {
+      "label": "debug-all-services: start",
+      "dependsOn": ["bunny-log-api: api dev", "bunny-log-client: dev", "standalone-web: dev"],
+      "dependsOrder": "sequence",
+      "runOptions": { "instanceLimit": 1, "instancePolicy": "silent" }
+    }
+  ]
+}

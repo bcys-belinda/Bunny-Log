@@ -1,0 +1,6 @@
+{
+  "rabbitId": "<rabbit-id>",
+  "date": "2026-09-28",
+  "checkIns": ["Eating", "Drinking", "Active"],
+  "notes": "Smoke test log"
+}
