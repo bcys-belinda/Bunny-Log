@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { useEffect, useState } from 'react';
-import { FluentProvider, webLightTheme, Text, Button, Card, Title3, Subtitle2, Avatar, Badge } from '@fluentui/react-components';
+import { FluentProvider, webLightTheme, Text, Button, Card, Title3, Subtitle2, Avatar, Badge, Field, Input, Textarea } from '@fluentui/react-components';
 import { Home24Regular, CalendarToday24Regular, Food24Regular, DataTrending24Regular, HeartPulse24Regular, Image24Regular, Settings24Regular, ArrowRight24Regular, Star24Regular, Clock24Regular, CheckmarkCircle24Regular } from '@fluentui/react-icons';
 import type { CareLog, FoodEntry, HealthRecord, MemoryEntry, Rabbit, WeightMeasurement } from '@bunny-log/shared';
 import { api, memoryContentUrl } from './api';
@@ -56,12 +56,17 @@ const styles: Record<string, React.CSSProperties> = {
   gallery: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' },
   photoCard: { padding: 0, overflow: 'hidden', borderRadius: '18px', border: '1px solid #F3D6E0', background: '#fff' },
   photo: { width: '100%', height: '150px', objectFit: 'cover', display: 'block', background: 'linear-gradient(135deg, #F7C9D8, #FBE3EC)' },
+  formCard: { maxWidth: '720px', padding: '24px', borderRadius: '18px', background: '#fff', border: '1px solid #F3D6E0', boxShadow: '0 4px 12px rgba(64,47,54,0.06)' },
+  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '20px' },
+  formActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' },
 };
 
 function App() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingLog, setSavingLog] = useState(false);
+  const [savingRabbit, setSavingRabbit] = useState(false);
+  const [rabbitForm, setRabbitForm] = useState({ name: '', breed: '', dob: '', notes: '' });
   const [error, setError] = useState('');
   const [activeNav, setActiveNav] = useState('Home');
 
@@ -119,6 +124,22 @@ function App() {
     }
   }
 
+  async function submitRabbit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingRabbit(true);
+    setError('');
+    try {
+      await api.createRabbit(rabbitForm);
+      setRabbitForm({ name: '', breed: '', dob: '', notes: '' });
+      await loadDashboard();
+      setActiveNav('Home');
+    } catch {
+      setError('The rabbit profile could not be saved. Check the API connection and try again.');
+    } finally {
+      setSavingRabbit(false);
+    }
+  }
+
   return (
     <FluentProvider theme={webLightTheme}>
       <div style={styles.app}>
@@ -162,7 +183,7 @@ function App() {
 
           {error && <Text role="alert" style={{ display: 'block', color: '#B54768', marginBottom: '16px' }}>{error}</Text>}
 
-          {activeNav !== 'Home' && (
+          {activeNav !== 'Home' && activeNav !== 'Settings' && (
             <section style={{ ...styles.hero, minHeight: '280px' }}>
               <div style={styles.heroText}>
                 <Subtitle2 style={{ color: '#B35E7B' }}>{activeNav}</Subtitle2>
@@ -170,6 +191,34 @@ function App() {
                 <Text style={{ color: '#8B6572' }}>This section is ready for your {activeNav.toLowerCase()} records.</Text>
               </div>
               <Badge appearance="tint" color="informative" style={{ padding: '10px 16px', fontSize: '16px' }}>Ready</Badge>
+            </section>
+          )}
+
+          {activeNav === 'Settings' && (
+            <section style={styles.formCard}>
+              <Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2>
+              <Title3 as="h2" style={{ margin: '6px 0 0' }}>Add a rabbit</Title3>
+              <Text style={{ color: '#8B6572' }}>Save the basics once, then use the other sections to track care.</Text>
+              <form onSubmit={(event) => void submitRabbit(event)}>
+                <div style={styles.formGrid}>
+                  <Field label="Name" required>
+                    <Input value={rabbitForm.name} onChange={(_, data) => setRabbitForm((current) => ({ ...current, name: data.value }))} placeholder="e.g. Fei Fei" required />
+                  </Field>
+                  <Field label="Breed" required>
+                    <Input value={rabbitForm.breed} onChange={(_, data) => setRabbitForm((current) => ({ ...current, breed: data.value }))} placeholder="e.g. Netherland Dwarf" required />
+                  </Field>
+                  <Field label="Date of birth" required>
+                    <Input type="date" value={rabbitForm.dob} onChange={(_, data) => setRabbitForm((current) => ({ ...current, dob: data.value }))} required />
+                  </Field>
+                </div>
+                <Field label="Notes" style={{ marginTop: '16px' }}>
+                  <Textarea value={rabbitForm.notes} onChange={(_, data) => setRabbitForm((current) => ({ ...current, notes: data.value }))} placeholder="Temperament, routines, or anything helpful" resize="vertical" />
+                </Field>
+                <div style={styles.formActions}>
+                  <Button type="button" appearance="subtle" onClick={() => setRabbitForm({ name: '', breed: '', dob: '', notes: '' })}>Clear</Button>
+                  <Button type="submit" appearance="primary" disabled={savingRabbit}>{savingRabbit ? 'Saving...' : 'Save profile'}</Button>
+                </div>
+              </form>
             </section>
           )}
 
@@ -206,7 +255,7 @@ function App() {
             <Card style={styles.listCard}>
               <div style={{ ...styles.row, borderTop: 'none', paddingTop: 0 }}>
                 <Text weight="semibold">Rabbit profiles</Text>
-                <Button appearance="subtle">View all</Button>
+                <Button appearance="subtle" onClick={() => setActiveNav('Settings')}>{rabbits.length ? 'View all' : 'Add profile'}</Button>
               </div>
               {rabbits.map((rabbit) => {
                 const log = lastCareByRabbit.get(rabbit.id);
