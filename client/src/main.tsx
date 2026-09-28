@@ -80,6 +80,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [savingLog, setSavingLog] = useState(false);
   const [savingRabbit, setSavingRabbit] = useState(false);
+  const [editingRabbitId, setEditingRabbitId] = useState<string | null>(null);
   const [savingEntry, setSavingEntry] = useState(false);
   const [rabbitForm, setRabbitForm] = useState({ name: '', breed: '', dob: '', notes: '' });
   const [careForm, setCareForm] = useState({ rabbitId: '', date: today, notes: '' });
@@ -150,8 +151,13 @@ function App() {
     setSavingRabbit(true);
     setError('');
     try {
-      await api.createRabbit(rabbitForm);
+      if (editingRabbitId) {
+        await api.updateRabbit(editingRabbitId, rabbitForm);
+      } else {
+        await api.createRabbit(rabbitForm);
+      }
       setRabbitForm({ name: '', breed: '', dob: '', notes: '' });
+      setEditingRabbitId(null);
       await loadDashboard();
       setActiveNav('Home');
     } catch {
@@ -159,6 +165,29 @@ function App() {
     } finally {
       setSavingRabbit(false);
     }
+  }
+
+  function editRabbit(rabbit: Rabbit) {
+    setEditingRabbitId(rabbit.id);
+    setRabbitForm({ name: rabbit.name, breed: rabbit.breed, dob: rabbit.dob, notes: rabbit.notes });
+    setActiveNav('Settings');
+  }
+
+  async function editMemory(entry: MemoryEntry) {
+    const caption = window.prompt('Update memory caption', entry.caption);
+    if (!caption || caption.trim() === entry.caption) return;
+    try {
+      await api.updateMemory(entry.id, { caption: caption.trim() });
+      await loadDashboard();
+    } catch { setError('The memory caption could not be updated.'); }
+  }
+
+  async function deleteMemory(entry: MemoryEntry) {
+    if (!window.confirm(`Delete ${entry.caption}?`)) return;
+    try {
+      await api.deleteMemory(entry.id);
+      await loadDashboard();
+    } catch { setError('The memory could not be deleted.'); }
   }
 
   function selectedRabbitId(value: string): string {
@@ -310,7 +339,7 @@ function App() {
 
           {activeNav === 'Settings' && (
             <section style={styles.formCard}>
-              <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Add a rabbit</Title3><Text style={{ color: '#8B6572' }}>Save the basics once, then use the other sections to track care.</Text></div>
+              <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>{editingRabbitId ? 'Edit rabbit profile' : 'Add a rabbit'}</Title3><Text style={{ color: '#8B6572' }}>Save the basics once, then use the other sections to track care.</Text></div>
               <form onSubmit={(event) => void submitRabbit(event)}>
                 <div className="form-grid" style={styles.formGrid}>
                   <Field label="Name" required>
@@ -327,8 +356,8 @@ function App() {
                   <Textarea value={rabbitForm.notes} onChange={(_, data) => setRabbitForm((current) => ({ ...current, notes: data.value }))} placeholder="Temperament, routines, or anything helpful" resize="vertical" />
                 </Field>
                 <div className="form-actions" style={styles.formActions}>
-                  <Button type="button" appearance="subtle" onClick={() => setRabbitForm({ name: '', breed: '', dob: '', notes: '' })}>Clear</Button>
-                  <Button type="submit" appearance="primary" disabled={savingRabbit}>{savingRabbit ? 'Saving...' : 'Save profile'}</Button>
+                  <Button type="button" appearance="subtle" onClick={() => { setRabbitForm({ name: '', breed: '', dob: '', notes: '' }); setEditingRabbitId(null); }}>Clear</Button>
+                  <Button type="submit" appearance="primary" disabled={savingRabbit}>{savingRabbit ? 'Saving...' : editingRabbitId ? 'Update profile' : 'Save profile'}</Button>
                 </div>
               </form>
             </section>
@@ -340,8 +369,9 @@ function App() {
           <section style={styles.hero}>
             <div style={styles.heroText}>
               <Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2>
-              <Text style={{ fontSize: '32px', fontWeight: 700 }}>{focusRabbit ? `${focusRabbit.name}'s care overview` : 'No rabbit profiles yet'}</Text>
+              <Text style={{ fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 700 }}>{focusRabbit ? `${focusRabbit.name}'s care overview` : 'No rabbit profiles yet'}</Text>
               <Text style={{ color: '#6F645C' }}>{focusRabbit ? `${focusRabbit.breed} · ${focusRabbit.notes || 'No profile notes'}` : 'Rabbit care records will appear here when available.'}</Text>
+              {focusRabbit && <Button appearance="subtle" onClick={() => editRabbit(focusRabbit)}>Edit profile</Button>}
             </div>
             <Badge appearance="tint" color={focusRabbit ? 'success' : 'warning'} style={{ padding: '10px 16px', fontSize: '16px' }}>
               {focusRabbit ? 'Profile active' : 'No profile'}
@@ -453,10 +483,14 @@ function App() {
             <div className="gallery-grid" style={styles.gallery}>
               {memories.map((entry) => (
                 <div key={entry.id} style={styles.photoCard}>
-                  <img style={styles.photo} src={memoryContentUrl(entry.id)} alt={entry.caption} />
+                  <img style={styles.photo} src={memoryContentUrl(entry.id)} alt={entry.caption} onError={(event) => { event.currentTarget.alt = 'Photo unavailable'; event.currentTarget.style.opacity = '0.35'; }} />
                   <div style={{ padding: '12px' }}>
                     <Text weight="semibold">{entry.caption}</Text>
                     <div style={{ color: '#6F645C', fontSize: '12px' }}>{formatDate(entry.capturedAt.slice(0, 10))}</div>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                      <Button size="small" appearance="subtle" onClick={() => void editMemory(entry)}>Edit caption</Button>
+                      <Button size="small" appearance="subtle" onClick={() => void deleteMemory(entry)}>Delete</Button>
+                    </div>
                   </div>
                 </div>
               ))}

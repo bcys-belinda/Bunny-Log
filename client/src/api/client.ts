@@ -36,6 +36,7 @@ export const liveClient: ApiClient = {
   health: () => request<ApiHealth>('/health'),
   listRabbits: () => request<Rabbit[]>('/rabbits'),
   createRabbit: (input) => create<Rabbit>('/rabbits', input),
+  updateRabbit: (id, input) => request<Rabbit>(`/rabbits/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
   listCareLogs: () => request<CareLog[]>('/daily-logs'),
   createCareLog: (input) => create<CareLog>('/daily-logs', input),
   listFoodEntries: () => request<FoodEntry[]>('/food-entries'),
@@ -46,6 +47,8 @@ export const liveClient: ApiClient = {
   createHealthRecord: (input) => create<HealthRecord>('/health-records', input),
   listMemories: () => request<MemoryEntry[]>('/memories'),
   uploadMemory: (input) => request('/memories/upload', { method: 'POST', body: input }),
+  updateMemory: (id, input) => request<MemoryEntry>(`/memories/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteMemory: async (id) => { await request<void>(`/memories/${encodeURIComponent(id)}`, { method: 'DELETE' }); },
 };
 
 export const memoryContentUrl = (id: string): string => `${API_BASE}/memories/${encodeURIComponent(id)}/content`;

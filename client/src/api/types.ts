@@ -12,6 +12,7 @@ export interface ApiClient {
   health(): Promise<ApiHealth>;
   listRabbits(): Promise<Rabbit[]>;
   createRabbit(input: Omit<Rabbit, 'id'>): Promise<Rabbit>;
+  updateRabbit(id: string, input: Omit<Rabbit, 'id'>): Promise<Rabbit>;
   listCareLogs(): Promise<CareLog[]>;
   createCareLog(input: Omit<CareLog, 'id'>): Promise<CareLog>;
   listFoodEntries(): Promise<FoodEntry[]>;
@@ -22,4 +23,6 @@ export interface ApiClient {
   createHealthRecord(input: Omit<HealthRecord, 'id'>): Promise<HealthRecord>;
   listMemories(): Promise<MemoryEntry[]>;
   uploadMemory(input: FormData): Promise<{ id: string; caption: string; blobUrl: string }>;
+  updateMemory(id: string, input: { caption: string }): Promise<MemoryEntry>;
+  deleteMemory(id: string): Promise<void>;
 }

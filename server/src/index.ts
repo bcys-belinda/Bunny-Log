@@ -58,6 +58,23 @@ app.post('/api/rabbits', asyncHandler(async (req, res) => {
   res.status(201).json(result.rows[0]);
 }));
 
+app.patch('/api/rabbits/:id', asyncHandler(async (req, res) => {
+  const { name, breed, dob, notes } = req.body as Record<string, unknown>;
+  if (typeof name !== 'string' || !name.trim() || typeof breed !== 'string' || !breed.trim() || !validDate(dob)) {
+    validationError(res, 'Name, breed, and a valid date of birth are required');
+    return;
+  }
+  const result = await pool.query(
+    'UPDATE rabbits SET name = $1, breed = $2, dob = $3, notes = $4 WHERE id = $5 RETURNING id, name, breed, dob::text AS dob, notes',
+    [name.trim(), breed.trim(), dob, typeof notes === 'string' ? notes : '', req.params.id],
+  );
+  if (!result.rowCount) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Rabbit profile not found' } });
+    return;
+  }
+  res.json(result.rows[0]);
+}));
+
 app.get('/api/daily-logs', asyncHandler(async (_req, res) => {
   const result = await pool.query('SELECT id, rabbit_id AS "rabbitId", date::text AS date, check_ins AS "checkIns", notes FROM care_logs ORDER BY date DESC, created_at DESC');
   res.json(result.rows);
@@ -159,6 +176,29 @@ app.post('/api/memories/upload', upload.single('photo'), asyncHandler(async (req
     [id, rabbitId, caption.trim(), blobKey, file.buffer, file.mimetype],
   );
   res.status(201).json({ id: result.rows[0].id, caption: result.rows[0].caption, blobUrl: `/api/memories/${id}/content` });
+}));
+
+app.patch('/api/memories/:id', asyncHandler(async (req, res) => {
+  const { caption } = req.body as Record<string, unknown>;
+  if (typeof caption !== 'string' || !caption.trim()) {
+    validationError(res, 'A caption is required');
+    return;
+  }
+  const result = await pool.query('UPDATE memories SET caption = $1 WHERE id = $2 RETURNING id, rabbit_id AS "rabbitId", caption, captured_at AS "capturedAt", blob_key AS "blobKey"', [caption.trim(), req.params.id]);
+  if (!result.rowCount) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Memory not found' } });
+    return;
+  }
+  res.json(result.rows[0]);
+}));
+
+app.delete('/api/memories/:id', asyncHandler(async (req, res) => {
+  const result = await pool.query('DELETE FROM memories WHERE id = $1 RETURNING id', [req.params.id]);
+  if (!result.rowCount) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Memory not found' } });
+    return;
+  }
+  res.status(204).end();
 }));
 
 const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _next) => {
