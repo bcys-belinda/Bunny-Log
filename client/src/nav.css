@@ -1,5 +1,46 @@
 .nav-button {
   outline: none;
+  transition: background 180ms ease, transform 180ms ease, border-color 180ms ease;
+}
+
+body {
+  margin: 0;
+  background: #F8F1E8;
+}
+
+.app-shell {
+  background-color: #FBF6EE !important;
+  background-image: radial-gradient(rgba(190, 135, 145, 0.12) 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+}
+
+.sidebar-shell {
+  background: #F3EBDD !important;
+  border-color: #E4D5C0 !important;
+  box-shadow: 5px 0 18px rgba(98, 76, 54, 0.05);
+}
+
+.main-shell h1,
+.main-shell h2,
+.main-shell h3 {
+  font-family: Georgia, 'Times New Roman', serif !important;
+  letter-spacing: 0.01em;
+}
+
+.main-shell .fui-Card,
+.main-shell section[style*="width: 100%"] {
+  border-color: #EAD9C7 !important;
+  box-shadow: 0 8px 22px rgba(109, 82, 60, 0.08) !important;
+}
+
+.nav-button:hover {
+  background: #F4DCE3 !important;
+  transform: translateX(3px);
+}
+
+.nav-button[aria-current="page"] {
+  background: #C9879F !important;
+  border-color: #C9879F !important;
 }
 
 .nav-button:focus,
@@ -27,7 +68,7 @@
 }
 
 .hero-panel::after {
-  content: '♡  ✦  ♡';
+  content: '🌿  ♡  ✦';
   position: absolute;
   right: 24px;
   bottom: 12px;
@@ -40,6 +81,14 @@
 
 .profile-badge {
   animation: bunny-pulse 2.8s ease-in-out infinite;
+}
+
+.main-shell section[style*="width: 100%"] > div:first-child::before {
+  content: '✿';
+  display: block;
+  color: #B87883;
+  font-size: 20px;
+  margin-bottom: 2px;
 }
 
 section[style*="max-width: 900px"] {
