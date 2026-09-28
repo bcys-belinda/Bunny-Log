@@ -139,7 +139,7 @@ function App() {
           <Card style={{ padding: '18px', borderRadius: '18px', background: '#fff' }}>
             <div style={styles.tinyLabel}>Today</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
-              <Avatar size={48} name="Clover" color="colorful" />
+              <Avatar size={48} name={focusRabbit?.name ?? ''} color="colorful" />
               <div>
                 <Text weight="semibold">{focusRabbit?.name ?? 'No profiles yet'}</Text>
                   <div style={{ color: '#6F645C', fontSize: '12px' }}>{focusRabbit?.breed ?? 'Add a rabbit profile to begin'}</div>
