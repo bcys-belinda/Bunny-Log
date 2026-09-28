@@ -74,6 +74,7 @@ const styles: Record<string, React.CSSProperties> = {
   formActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' },
   select: { width: '100%', minHeight: '32px', padding: '0 8px', border: '1px solid #D1C3C8', borderRadius: '4px', background: '#fff', color: '#402F36', font: 'inherit' },
   formHeader: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  heroActions: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' },
 };
 
 function App() {
@@ -413,16 +414,18 @@ function App() {
           {activeNav === 'Home' && <>
           {loading && <Text role="status">Loading care data...</Text>}
 
-          <section style={styles.hero}>
+          <section className="hero-panel" style={styles.hero}>
             <div style={styles.heroText}>
               <Subtitle2 style={{ color: '#B35E7B' }}>Rabbit profile</Subtitle2>
               <Text style={{ fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 700 }}>{focusRabbit ? `${focusRabbit.name}'s care overview` : 'No rabbit profiles yet'}</Text>
               <Text style={{ color: '#6F645C' }}>{focusRabbit ? `${focusRabbit.breed} · ${focusRabbit.notes || 'No profile notes'}` : 'Rabbit care records will appear here when available.'}</Text>
-              {focusRabbit && <Button appearance="subtle" onClick={() => editRabbit(focusRabbit)}>Edit profile</Button>}
             </div>
-            <Badge appearance="tint" color={focusRabbit ? 'success' : 'warning'} style={{ padding: '10px 16px', fontSize: '16px' }}>
-              {focusRabbit ? 'Profile active' : 'No profile'}
-            </Badge>
+            <div className="hero-actions" style={styles.heroActions}>
+              {focusRabbit && <Button appearance="secondary" onClick={() => editRabbit(focusRabbit)}>Edit profile</Button>}
+              <Badge className="profile-badge" appearance="tint" color={focusRabbit ? 'success' : 'warning'} style={{ padding: '14px 20px', fontSize: '18px', fontWeight: 700, minWidth: '138px', justifyContent: 'center' }}>
+                {focusRabbit ? 'Profile active' : 'No profile'}
+              </Badge>
+            </div>
           </section>
 
           <section className="summary-grid" style={styles.summaryGrid}>
@@ -529,7 +532,7 @@ function App() {
             </div>
             <div className="gallery-grid" style={styles.gallery}>
               {memories.map((entry) => (
-                <div key={entry.id} style={styles.photoCard}>
+                <div className="photo-card" key={entry.id} style={styles.photoCard}>
                   <img style={styles.photo} src={memoryContentUrl(entry.id)} alt={entry.caption} onError={(event) => { event.currentTarget.alt = 'Photo unavailable'; event.currentTarget.style.opacity = '0.35'; }} />
                   <div style={{ padding: '12px' }}>
                     <Text weight="semibold">{entry.caption}</Text>

@@ -21,6 +21,44 @@
 .main-shell > *:nth-child(3) { animation-delay: 80ms; }
 .main-shell > *:nth-child(4) { animation-delay: 120ms; }
 
+.hero-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-panel::after {
+  content: '♡  ✦  ♡';
+  position: absolute;
+  right: 24px;
+  bottom: 12px;
+  color: rgba(179, 94, 123, 0.22);
+  font-size: 22px;
+  letter-spacing: 10px;
+  animation: bunny-drift 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.profile-badge {
+  animation: bunny-pulse 2.8s ease-in-out infinite;
+}
+
+.photo-card {
+  animation: bunny-rise-in 500ms ease both;
+}
+
+.photo-card:nth-child(2) { animation-delay: 80ms; }
+.photo-card:nth-child(3) { animation-delay: 160ms; }
+
+@keyframes bunny-drift {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+@keyframes bunny-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 140, 168, 0.16); }
+  50% { box-shadow: 0 0 0 7px rgba(217, 140, 168, 0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .main-shell > * {
     animation: none;
@@ -69,6 +107,15 @@
     flex: 0 0 auto;
   }
 
+  .hero-panel {
+    align-items: flex-start !important;
+    gap: 18px;
+  }
+
+  .hero-actions {
+    align-items: flex-start !important;
+  }
+
   .summary-grid,
   .content-section,
   .gallery-grid {
@@ -92,5 +139,13 @@
 
   .form-actions {
     flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-panel::after,
+  .profile-badge,
+  .photo-card {
+    animation: none;
   }
 }
