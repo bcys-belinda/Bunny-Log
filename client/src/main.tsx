@@ -66,10 +66,10 @@ const styles: Record<string, React.CSSProperties> = {
   listCard: { padding: '18px', borderRadius: '16px', background: '#fff', border: '1px solid #F3D6E0' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid #F0E7DA' },
   tinyLabel: { color: '#9D6075', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' },
-  gallery: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' },
+  gallery: { display: 'flex', gap: '18px', overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: '8px' },
   photoCard: { padding: 0, overflow: 'hidden', borderRadius: '18px', border: '1px solid #F3D6E0', background: '#fff' },
-  photo: { width: '100%', height: '150px', objectFit: 'cover', display: 'block', background: 'linear-gradient(135deg, #F7C9D8, #FBE3EC)' },
-  formCard: { maxWidth: '900px', padding: '28px', borderRadius: '22px', background: '#fff', border: '1px solid #F3D6E0', boxShadow: '0 8px 24px rgba(64,47,54,0.07)' },
+  photo: { width: '100%', height: '320px', objectFit: 'cover', display: 'block', background: 'linear-gradient(135deg, #F7C9D8, #FBE3EC)' },
+  formCard: { maxWidth: 'none', width: '100%', boxSizing: 'border-box', padding: '28px', borderRadius: '22px', background: '#fff', border: '1px solid #F3D6E0', boxShadow: '0 8px 24px rgba(64,47,54,0.07)' },
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '20px' },
   formActions: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' },
   select: { width: '100%', minHeight: '32px', padding: '0 8px', border: '1px solid #D1C3C8', borderRadius: '4px', background: '#fff', color: '#402F36', font: 'inherit' },
@@ -532,7 +532,7 @@ function App() {
             </div>
             <div className="gallery-grid" style={styles.gallery}>
               {memories.map((entry) => (
-                <div className="photo-card" key={entry.id} style={styles.photoCard}>
+                <div className="photo-card memory-slide" key={entry.id} style={styles.photoCard}>
                   <img style={styles.photo} src={memoryContentUrl(entry.id)} alt={entry.caption} onError={(event) => { event.currentTarget.alt = 'Photo unavailable'; event.currentTarget.style.opacity = '0.35'; }} />
                   <div style={{ padding: '12px' }}>
                     <Text weight="semibold">{entry.caption}</Text>

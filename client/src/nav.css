@@ -62,6 +62,11 @@ section[style*="max-width: 900px"]::after {
   animation: bunny-rise-in 500ms ease both;
 }
 
+.memory-slide {
+  flex: 0 0 min(78vw, 520px);
+  scroll-snap-align: start;
+}
+
 .photo-card:nth-child(2) { animation-delay: 80ms; }
 .photo-card:nth-child(3) { animation-delay: 160ms; }
 
@@ -142,15 +147,19 @@ section[style*="max-width: 900px"]::after {
     grid-template-columns: 1fr !important;
   }
 
-  section[style*="max-width: 900px"] {
+  section[style*="width: 100%"] {
     max-width: none !important;
     padding: 18px !important;
   }
 
-  section[style*="max-width: 900px"] input,
-  section[style*="max-width: 900px"] textarea,
-  section[style*="max-width: 900px"] select {
+  section[style*="width: 100%"] input,
+  section[style*="width: 100%"] textarea,
+  section[style*="width: 100%"] select {
     max-width: 100%;
+  }
+
+  .memory-slide {
+    flex-basis: 88vw;
   }
 
   .form-actions {
