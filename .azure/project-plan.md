@@ -1,59 +1,179 @@
+# Project Plan
+
 **Status**: Approved
 **Created**: 2026-09-28
-**Mode**: planning
+**Mode**: NEW
+
+---
 
 ## 1. Project Overview
 
-Bunny Log is a warm, polished rabbit-care tracker for daily check-ins, food, weight, health, and photo memories. It is a single-owner experience with a React frontend and a TypeScript API. Users can record routine care, review trends, maintain health history, and preserve photo memories in one place.
+**Goal**: Bunny Log is a warm, polished rabbit-care tracker for daily care routines, food, weight, health history, reminders, and scrapbook memories. The project is designed so that every module is independently testable.
 
-## 2. Goals & Requirements
+**App Type**: SPA + API
 
-- Build a responsive, accessible interface for recording and reviewing rabbit care.
-- Support rabbit profiles, daily care logs, food entries and favorites, weight measurements, health records and reminders, and scrapbook photo metadata.
-- Provide create, read, update, and delete operations for the stored records.
-- Store uploaded scrapbook photos in Azure Blob Storage and relational records in PostgreSQL.
-- Do not require application sign-in, per the selected requirement. Treat the deployed instance and its data as private; restrict network access until an access-control approach is explicitly approved. Do not expose unauthenticated personal records or uploaded media publicly.
+**API Login**: No
 
-## 3. Architecture
+**Mode**: NEW
 
-- **Frontend**: React with TypeScript; deploy as a static web application.
-- **Backend API**: TypeScript with Express; expose REST endpoints and connect to the database and object storage through server-side configuration.
-- **Relational data**: Azure Database for PostgreSQL Flexible Server for rabbit profiles and care records.
-- **Media**: Azure Blob Storage for scrapbook image files. Keep containers private and use short-lived, server-issued access URLs when displaying or uploading images.
-- **Configuration**: Keep database credentials and storage access in managed application settings or secret references. The browser must not receive database credentials or storage account keys.
-- **Deployment boundary**: Host the frontend separately from the API. Configure the frontend's API base URL per environment, allow only the expected frontend origin, and use HTTPS.
+**Deployment Plan**: No deployment plan found
 
-## 4. Data Model
+---
 
-- **RabbitProfile**: id, name, photo reference, breed, date of birth (optional), and profile notes.
-- **DailyCareLog**: id, rabbit id, local date, check-in markers, care notes, and created/updated timestamps.
-- **FoodEntry**: id, rabbit id, date, food name, quantity, notes, and favorite flag. Weekly summaries are derived from these entries.
-- **WeightMeasurement**: id, rabbit id, measured-at date, value, unit, and notes. The UI plots measurements chronologically.
-- **HealthRecord**: id, rabbit id, date, category, summary, details, and optional reminder date.
-- **PhotoMemory**: id, rabbit id, private blob reference, caption, captured-at date, and created-at timestamp. Store image bytes only in Blob Storage.
+## 2. Backend — API
 
-Use generated identifiers, foreign keys to the rabbit profile, and timestamps on mutable records. Validate units, dates, and required fields in the API. Store dates consistently and format them in the user's local timezone in the UI.
+| Component | Technology |
+|-----------|-----------|
+| **Language** | TypeScript |
+| **Runtime** | Node |
+| **Package Manager** | npm |
+| **Test Runner** | vitest |
+| **Mocking Library** | vi.mock |
+| **Test Command** | npm test |
+| **Orchestration** | docker-compose |
 
-## 5. API & Application Flows
+> **Language vs Runtime**: `Language` is the source language the user picked in this service's `language` question. `Runtime` is the execution runtime — default `Node` for TypeScript/JavaScript, `CPython` for Python, `.NET` for C#. Only deviate from the default (e.g. `Bun`, `Deno`, `PyPy`) when the user explicitly asks. **Package Manager and Test Runner are language-dependent** — match them to this service's Language (e.g. C# → `dotnet (NuGet)` + `xUnit`/`NUnit`/`MSTest`). The `Orchestration` row is recorded for the scaffold step but hidden in the plan UI — always keep it set to `docker-compose`.
 
-Provide RESTful CRUD routes grouped by resource: `/api/rabbits`, `/api/daily-logs`, `/api/food-entries`, `/api/weight-measurements`, `/api/health-records`, and `/api/photo-memories`. Add focused read endpoints for dashboard summaries, calendar-day details, and weekly food totals where these reduce client-side duplication.
+---
 
-Photo uploads should use an API-authorized flow that keeps the container private; persist metadata and blob references separately. Return consistent validation and not-found errors, and avoid returning secrets or raw storage credentials. Configure CORS narrowly for the deployed frontend origin.
+## 3. Frontend — Web App
 
-The primary screen is a time-aware dashboard with the rabbit profile, daily check-in markers, care summaries, a weight trend, and a prominent **Log Today** action. A calendar shows paw indicators and selected-day details. Dedicated Food, Weight, Health, and Memories views provide weekly food summaries and favorites, a weight chart, health history and reminders, and a captioned scrapbook gallery. **Log Today** opens a right-side slide-in panel with accessible, validated inputs and clear save/cancel feedback.
+| Component | Technology |
+|-----------|-----------|
+| **Language** | TypeScript |
+| **Framework** | React + Vite |
+| **Package Manager** | npm |
+| **Test Runner** | vitest |
+| **Mocking Library** | vi.mock |
+| **Test Command** | npm test |
+
+---
+
+## 4. Services Required
+
+| Azure Service | Role in App | Environment Variable | Default Value (Local) | Classification |
+|---------------|------------|---------------------|----------------------|----------------|
+| Blob Storage | Store rabbit photos and scrapbook uploads | STORAGE_CONNECTION_STRING | UseDevelopmentStorage=true | Essential |
+| PostgreSQL | Primary persistence for rabbit profiles, care logs, food, weight, and health records | DATABASE_URL | postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/bunnylog | Essential |
+
+---
+
+## 5. Prerequisites
+
+### Run
+
+| Tool | Service(s) | Installed | Version |
+|------|------------|-----------|---------|
+| Node.js | Backend, Frontend | ✅ | 24.19.0 |
+| npm | Backend, Frontend | ✅ | 11.17.0 |
+| PostgreSQL client | Backend | ❓ | Unknown |
+
+### Debug
+
+| Tool | Service(s) | Installed | Version |
+|------|------------|-----------|---------|
+| Docker | Backend | ❓ | Unknown |
+| Docker Compose | Backend | ❓ | Unknown |
+
+> Inform the user to double-check all ❓ tools are installed before proceeding.
+
+---
 
 ## 6. Design System & UI
 
 **Component Library**: Fluent UI v9
+**Style Direction**: A warm, homey care dashboard with soft cream surfaces, sage accents, and tactile cards that make everyday rabbit care feel approachable and calm. The interface should feel reassuring and premium without becoming overly playful or cluttered.
+**Typography**: Inter, system-ui
 
-Use a warm off-white canvas with sage and restrained brown as supporting colors, balanced by a small coral accent for primary actions and clear status colors. Maintain readable contrast and avoid using color alone to communicate care status. Use expressive display typography for page titles and a highly legible sans-serif for controls and data. Keep navigation dense and predictable, reserve compact cards for repeated metrics, and use a stable chart area for weight history.
+### Color Palette
 
-The desktop layout has a persistent left navigation for Home, Daily Log, Food, Weight, Health, Memories, and Settings, with a focused content area. On smaller screens, collapse navigation into an accessible menu and make the logging panel a full-width sheet. Use labeled controls, keyboard-operable calendar and gallery interactions, visible focus states, descriptive image text, and reduced-motion support. Rabbit-themed interactions should remain subtle and never block task completion.
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `primary` | `#7B8F73` | Brand and active navigation; uses for selected nav items and primary actions. |
+| `accent` | `#D68B63` | Secondary highlights for quick actions, paw indicators, and callouts. |
+| `surface` | `#FBF8F1` | Main page and card backgrounds for a light, restful treatment workspace. |
+| `text` | `#2F2A27` | Body text and labels for readable, high-contrast content. |
+| `muted` | `#6F645C` | Secondary metadata, timestamps, and subdued captions. |
+| `border` | `#E7DFD4` | Dividers, table borders, and input boundaries. |
 
-## 7. Validation & Delivery
+### Pages
 
-- Verify core CRUD flows and field validation for every record type.
-- Verify dashboard summaries, calendar selection, weekly food totals, weight chart updates, reminders, and photo upload/display behavior.
-- Check responsive layouts, keyboard navigation, focus visibility, contrast, and reduced-motion behavior.
-- Confirm private blob access, HTTPS, secret handling, and network restrictions for the unauthenticated deployment before storing real personal data.
-- Provide environment-specific configuration and a concise local setup guide; do not commit credentials or real rabbit-care data.
+| Page | Route | Purpose | Layout |
+|------|-------|---------|--------|
+| Dashboard | `/` | Overview of today’s rabbit care, summary cards, and a quick log CTA | `sidebar + hero + main + card-list` |
+| Daily Log | `/daily-log` | Review selected-day care and capture check-ins, notes, and medications | `sidebar + list + form + action-bar` |
+| Food | `/food` | Track feeding history, favorites, and weekly totals | `sidebar + table + card-list` |
+| Weight | `/weight` | Monitor weight changes over time and compare trends | `sidebar + grid + table` |
+| Memories | `/memories` | Browse scrapbook photos with captions and dates | `sidebar + card-list + gallery` |
+
+### Sample Content
+
+```
+Dashboard — Rabbit profile:
+| Rabbit | Last Check-In | Weight | Status |
+| Clover | Today, 8:15 AM | 1.8 kg | Healthy |
+| Maple | Today, 7:40 AM | 1.6 kg | Needs hydration check |
+| Pippin | Yesterday | 2.1 kg | Stable |
+
+Daily Log — care entry: Breakfast meal: hay + greens · Notes: alert and active · Reminder: Trim nails on Friday
+Food — meal: Fresh greens and pellets · Favorite: Yes · Weekly total: 5.6 kg
+Memories — photo caption: Napping in the warm sun · Date: 2026-09-12
+```
+
+---
+
+## 7. Project Structure
+
+```
+/
+├─ .azure/
+│  ├─ project-plan.md
+│  ├─ requirements.json
+│  └─ .preview-temp/
+├─ client/
+│  ├─ src/
+│  ├─ package.json
+│  ├─ tsconfig.json
+│  ├─ vite.config.ts
+│  └─ index.html
+├─ server/
+│  ├─ src/
+│  ├─ package.json
+│  ├─ tsconfig.json
+│  └─ src/routes/
+├─ shared/
+│  └─ types/
+├─ docker-compose.yml
+├─ .env.example
+├─ README.md
+└─ package.json
+```
+
+---
+
+## 8. Route Definitions
+
+| # | Method | Path | Description | Request Body | Response Body | Status Codes |
+|---|--------|------|-------------|-------------|--------------|-------------|
+| 1 | GET | `/api/health` | Health check | — | `{ status, services }` | 200, 503 |
+| 2 | GET | `/api/rabbits` | List rabbit profiles | — | `[{ id, name, breed, dob, notes }]` | 200 |
+| 3 | POST | `/api/rabbits` | Create rabbit profile | `{ name, breed, dob, notes }` | `{ id, name, breed, dob, notes }` | 201, 400 |
+| 4 | GET | `/api/daily-logs` | List care logs | — | `[{ id, rabbitId, date, checkIns, notes }]` | 200 |
+| 5 | POST | `/api/daily-logs` | Create care log | `{ rabbitId, date, checkIns, notes }` | `{ id, rabbitId, date, checkIns, notes }` | 201, 400 |
+| 6 | GET | `/api/food-entries` | List food entries | — | `[{ id, rabbitId, date, foodName, quantity, favorite }]` | 200 |
+| 7 | POST | `/api/food-entries` | Save food entry | `{ rabbitId, date, foodName, quantity, favorite }` | `{ id, rabbitId, date, foodName, quantity, favorite }` | 201, 400 |
+| 8 | GET | `/api/weight-measurements` | List weight history | — | `[{ id, rabbitId, date, value, unit }]` | 200 |
+| 9 | POST | `/api/weight-measurements` | Save weight entry | `{ rabbitId, date, value, unit }` | `{ id, rabbitId, date, value, unit }` | 201, 400 |
+| 10 | GET | `/api/health-records` | List health items | — | `[{ id, rabbitId, date, category, summary, reminderDate }]` | 200 |
+| 11 | POST | `/api/health-records` | Save health record | `{ rabbitId, date, category, summary, reminderDate }` | `{ id, rabbitId, date, category, summary, reminderDate }` | 201, 400 |
+| 12 | GET | `/api/memories` | List scrapbook photos | — | `[{ id, rabbitId, caption, capturedAt, blobKey }]` | 200 |
+| 13 | POST | `/api/memories/upload` | Upload a scrapbook photo | `multipart/form-data` | `{ id, caption, blobUrl }` | 201, 400, 413 |
+
+---
+
+## 9. Next Steps
+
+1. Run **azure-project-scaffold** to execute this plan
+2. Run **azure-project-integrate** to wire the frontend to live data, smoke-test the backend, and create the migrations
+3. Run **azure-debug-plan** → **azure-debug-generate** for Docker emulators and VS Code debugging
+4. Run the **azure-deploy** agent when ready; it uses **azure-app-onboard** for architecture, cost estimation, IaC generation, provisioning, and health verification

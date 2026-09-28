@@ -1,0 +1,14 @@
+{
+  "name": "bunny-log",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "build": "npm run build -w client && npm run build -w shared && npm run build -w server",
+    "test": "npm run test -w client -- --run && npm run test -w server -- --run"
+  }
+}
