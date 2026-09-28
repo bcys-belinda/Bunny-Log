@@ -296,6 +296,15 @@ function App() {
     setRoutineDraft('');
   }
 
+  function removeRoutineItem(item: string) {
+    setCustomRoutineItems((current) => current.filter((existing) => existing !== item));
+    setRoutineChecks((current) => current.filter((selected) => selected !== item));
+  }
+
+  function removeShoppingItem(item: string) {
+    setShoppingItems((current) => current.filter((existing) => existing !== item));
+  }
+
   return (
     <FluentProvider theme={webLightTheme}>
       <div className="app-shell" style={styles.app}>
@@ -342,7 +351,7 @@ function App() {
           {activeNav === 'Daily Log' && (
             <section style={styles.formCard}>
               <div style={styles.formHeader}><Subtitle2 style={{ color: '#B35E7B' }}>Daily care</Subtitle2><Title3 as="h2" style={{ margin: 0 }}>Log today’s routine</Title3><Text style={{ color: '#8B6572' }}>Tick off food, supplements, and cage care as you go.</Text></div>
-              <form onSubmit={(event) => void submitCareLog(event)}><div style={styles.formGrid}>{rabbitPicker(careForm.rabbitId, (value) => setCareForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', careForm.date, (value) => setCareForm((current) => ({ ...current, date: value })))} </div><Field label="Routine checklist" required><div style={{ display: 'grid', gap: '10px' }}>{[...routineItems, ...customRoutineItems].map((item) => <label key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.35 }}><input type="checkbox" checked={routineChecks.includes(item)} onChange={(event) => setRoutineChecks((current) => event.target.checked ? [...current, item] : current.filter((selected) => selected !== item))} />{item}</label>)}</div></Field><div style={{ display: 'flex', gap: '10px', alignItems: 'end', marginTop: '16px' }}><Field label="Poop size"><select style={styles.select} value={poopSize} onChange={(event) => setPoopSize(event.target.value)}><option value="">Not recorded</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></Field><div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'end' }}><Input value={routineDraft} onChange={(_, data) => setRoutineDraft(data.value)} placeholder="Add checklist item" /><Button type="button" appearance="secondary" onClick={addRoutineItem}>Add</Button></div></div><Field label="Notes" style={{ marginTop: '16px' }}><Textarea value={careForm.notes} onChange={(_, data) => setCareForm((current) => ({ ...current, notes: data.value }))} placeholder="Anything unusual or worth remembering" /></Field>{entryActions('Save routine')}</form>
+              <form onSubmit={(event) => void submitCareLog(event)}><div style={styles.formGrid}>{rabbitPicker(careForm.rabbitId, (value) => setCareForm((current) => ({ ...current, rabbitId: value })))}{dateField('Date', careForm.date, (value) => setCareForm((current) => ({ ...current, date: value })))} </div><Field label="Routine checklist" required><div style={{ display: 'grid', gap: '10px' }}>{[...routineItems, ...customRoutineItems].map((item) => <label key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.35 }}><input type="checkbox" checked={routineChecks.includes(item)} onChange={(event) => setRoutineChecks((current) => event.target.checked ? [...current, item] : current.filter((selected) => selected !== item))} /><span style={{ flex: 1 }}>{item}</span>{customRoutineItems.includes(item) && <Button type="button" size="small" appearance="subtle" onClick={() => removeRoutineItem(item)}>Remove</Button>}</label>)}</div></Field><div style={{ display: 'flex', gap: '10px', alignItems: 'end', marginTop: '16px' }}><Field label="Poop size"><select style={styles.select} value={poopSize} onChange={(event) => setPoopSize(event.target.value)}><option value="">Not recorded</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></Field><div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'end' }}><Input value={routineDraft} onChange={(_, data) => setRoutineDraft(data.value)} placeholder="Add checklist item" /><Button type="button" appearance="secondary" onClick={addRoutineItem}>Add</Button></div></div><Field label="Notes" style={{ marginTop: '16px' }}><Textarea value={careForm.notes} onChange={(_, data) => setCareForm((current) => ({ ...current, notes: data.value }))} placeholder="Anything unusual or worth remembering" /></Field>{entryActions('Save routine')}</form>
             </section>
           )}
 
@@ -396,7 +405,7 @@ function App() {
                 <Button type="submit" appearance="primary">Add</Button>
               </form>
               <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
-                {shoppingItems.map((item) => <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '12px', background: '#FFF0F5' }}><input type="checkbox" /> <span>{item}</span></label>)}
+                {shoppingItems.map((item) => <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '12px', background: '#FFF0F5' }}><input type="checkbox" /> <span style={{ flex: 1 }}>{item}</span><Button type="button" size="small" appearance="subtle" onClick={() => removeShoppingItem(item)}>Remove</Button></label>)}
               </div>
             </section>
           )}
